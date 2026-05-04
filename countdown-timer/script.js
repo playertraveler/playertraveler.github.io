@@ -113,11 +113,8 @@ function startTimer() {
   state = TimerState.RUNNING;
   syncButtons();
 
-  if (intervalId === null) {
-    tick();
-    if (totalSeconds > 0) {
-      intervalId = setInterval(tick, 1000);
-    }
+  if (intervalId === null && totalSeconds > 0) {
+    intervalId = setInterval(tick, 1000);
   }
 }
 
