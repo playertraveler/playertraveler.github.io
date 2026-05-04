@@ -6,72 +6,88 @@ const TimerState = {
 
 const minutesInput = document.getElementById("minutes");
 const secondsInput = document.getElementById("seconds");
+const startButton = document.getElementById("start");
+const stopButton = document.getElementById("stop");
+const resetButton = document.getElementById("reset");
 const display = document.getElementById("display");
 const message = document.getElementById("message");
-const startButton = document.getElementById("start-btn");
-const stopButton = document.getElementById("stop-btn");
-const resetButton = document.getElementById("reset-btn");
 
 let state = TimerState.IDLE;
-let totalSecondsRemaining = 0;
+let totalSeconds = 0;
 let originalTotalSeconds = 0;
 let intervalId = null;
 
-function formatTime(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
-function setMessage(text, isError = false) {
-  message.textContent = text;
-  message.style.color = isError ? "#b91c1c" : "#047857";
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
 function updateDisplay() {
-  display.textContent = formatTime(totalSecondsRemaining);
+  display.textContent = formatTime(totalSeconds);
 }
 
-function updateButtonStates() {
-  startButton.disabled = state === TimerState.RUNNING;
-  stopButton.disabled = state !== TimerState.RUNNING;
+function clearMessage() {
+  message.textContent = "";
 }
 
-function clearTimerInterval() {
-  if (intervalId !== null) {
-    clearInterval(intervalId);
-    intervalId = null;
-  }
+function setMessage(text) {
+  message.textContent = text;
 }
 
-function readAndValidateInput() {
-  const minutes = Number(minutesInput.value);
-  const seconds = Number(secondsInput.value);
+function parseAndValidateInput() {
+  const minutesText = minutesInput.value.trim();
+  const secondsText = secondsInput.value.trim();
+
+  const minutes = minutesText === "" ? 0 : Number(minutesText);
+  const seconds = secondsText === "" ? 0 : Number(secondsText);
 
   const isValid =
     Number.isInteger(minutes) &&
     Number.isInteger(seconds) &&
     minutes >= 0 &&
     seconds >= 0 &&
-    seconds <= 59 &&
-    minutes * 60 + seconds > 0;
+    seconds <= 59;
 
   if (!isValid) {
-    return { valid: false, totalSeconds: 0 };
+    return null;
   }
 
-  return { valid: true, totalSeconds: minutes * 60 + seconds };
+  const combined = minutes * 60 + seconds;
+  if (combined <= 0) {
+    return null;
+  }
+
+  return combined;
+}
+
+function syncButtons() {
+  const isRunning = state === TimerState.RUNNING;
+
+  startButton.disabled = isRunning;
+  stopButton.disabled = !isRunning;
+  minutesInput.disabled = isRunning;
+  secondsInput.disabled = isRunning;
+}
+
+function stopInterval() {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
 }
 
 function tick() {
-  totalSecondsRemaining = Math.max(0, totalSecondsRemaining - 1);
-  updateDisplay();
+  if (totalSeconds > 0) {
+    totalSeconds -= 1;
+    updateDisplay();
+  }
 
-  if (totalSecondsRemaining === 0) {
-    clearTimerInterval();
+  if (totalSeconds === 0) {
+    stopInterval();
     state = TimerState.IDLE;
+    syncButtons();
     setMessage("Time is up!");
-    updateButtonStates();
   }
 }
 
@@ -80,24 +96,29 @@ function startTimer() {
     return;
   }
 
+  clearMessage();
+
   if (state === TimerState.IDLE) {
-    const parsed = readAndValidateInput();
-    if (!parsed.valid) {
-      setMessage("Please enter a valid time.", true);
+    const validatedSeconds = parseAndValidateInput();
+    if (validatedSeconds === null) {
+      setMessage("Please enter a valid time.");
       return;
     }
 
-    originalTotalSeconds = parsed.totalSeconds;
-    totalSecondsRemaining = parsed.totalSeconds;
+    originalTotalSeconds = validatedSeconds;
+    totalSeconds = validatedSeconds;
     updateDisplay();
   }
 
-  setMessage("");
   state = TimerState.RUNNING;
-  updateButtonStates();
+  syncButtons();
 
-  clearTimerInterval();
-  intervalId = setInterval(tick, 1000);
+  if (intervalId === null) {
+    tick();
+    if (totalSeconds > 0) {
+      intervalId = setInterval(tick, 1000);
+    }
+  }
 }
 
 function stopTimer() {
@@ -105,23 +126,29 @@ function stopTimer() {
     return;
   }
 
-  clearTimerInterval();
+  stopInterval();
   state = TimerState.PAUSED;
-  updateButtonStates();
+  syncButtons();
 }
 
 function resetTimer() {
-  clearTimerInterval();
-  totalSecondsRemaining = originalTotalSeconds;
-  updateDisplay();
+  stopInterval();
   state = TimerState.IDLE;
-  setMessage("");
-  updateButtonStates();
+  totalSeconds = 0;
+  originalTotalSeconds = 0;
+  minutesInput.value = "0";
+  secondsInput.value = "0";
+  updateDisplay();
+  clearMessage();
+  syncButtons();
 }
 
 startButton.addEventListener("click", startTimer);
 stopButton.addEventListener("click", stopTimer);
 resetButton.addEventListener("click", resetTimer);
 
+minutesInput.value = "0";
+secondsInput.value = "0";
+
+syncButtons();
 updateDisplay();
-updateButtonStates();

@@ -10,25 +10,23 @@
     <main class="timer-app">
       <h1>Countdown Timer</h1>
 
-      <section class="inputs" aria-label="Timer input">
-        <label>
-          Minutes
-          <input id="minutes" type="number" min="0" step="1" inputmode="numeric" />
-        </label>
-        <label>
-          Seconds
-          <input id="seconds" type="number" min="0" max="59" step="1" inputmode="numeric" />
-        </label>
+      <section class="inputs" aria-label="Timer inputs">
+        <label for="minutes">Minutes</label>
+        <input id="minutes" type="number" min="0" step="1" inputmode="numeric" />
+
+        <label for="seconds">Seconds</label>
+        <input id="seconds" type="number" min="0" max="59" step="1" inputmode="numeric" />
       </section>
 
       <p id="display" class="display" aria-live="polite">00:00</p>
-      <p id="message" class="message" aria-live="polite"></p>
 
-      <section class="buttons" aria-label="Timer controls">
-        <button id="start-btn" type="button">Start</button>
-        <button id="stop-btn" type="button">Stop</button>
-        <button id="reset-btn" type="button">Reset</button>
+      <section class="controls" aria-label="Timer controls">
+        <button id="start" type="button">Start</button>
+        <button id="stop" type="button">Stop</button>
+        <button id="reset" type="button">Reset</button>
       </section>
+
+      <p id="message" class="message" aria-live="polite"></p>
     </main>
 
     <script src="script.js"></script>
