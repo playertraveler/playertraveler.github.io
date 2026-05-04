@@ -27,6 +27,13 @@ function updateDisplay() {
   display.textContent = formatTime(totalSeconds);
 }
 
+function setInputsFromTotalSeconds(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  minutesInput.value = String(mins);
+  secondsInput.value = String(secs);
+}
+
 function clearMessage() {
   message.textContent = "";
 }
@@ -113,11 +120,8 @@ function startTimer() {
   state = TimerState.RUNNING;
   syncButtons();
 
-  if (intervalId === null) {
-    tick();
-    if (totalSeconds > 0) {
-      intervalId = setInterval(tick, 1000);
-    }
+  if (intervalId === null && totalSeconds > 0) {
+    intervalId = setInterval(tick, 1000);
   }
 }
 
@@ -134,10 +138,9 @@ function stopTimer() {
 function resetTimer() {
   stopInterval();
   state = TimerState.IDLE;
-  totalSeconds = 0;
-  originalTotalSeconds = 0;
-  minutesInput.value = "0";
-  secondsInput.value = "0";
+
+  totalSeconds = originalTotalSeconds > 0 ? originalTotalSeconds : 0;
+  setInputsFromTotalSeconds(totalSeconds);
   updateDisplay();
   clearMessage();
   syncButtons();
@@ -147,8 +150,7 @@ startButton.addEventListener("click", startTimer);
 stopButton.addEventListener("click", stopTimer);
 resetButton.addEventListener("click", resetTimer);
 
-minutesInput.value = "0";
-secondsInput.value = "0";
+setInputsFromTotalSeconds(0);
 
 syncButtons();
 updateDisplay();
